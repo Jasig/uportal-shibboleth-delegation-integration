@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jasig.service</groupId>
+  <artifactId>shibboleth-integration</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0</version>
+
+  <name>SAML Assertion UserInfoService</name>
+  <description>Project allowing to make the SAML assertion available as a prtlet attribute</description>
+
+  <properties>
+    <!-- Project Dependency Version Properties -->
+
+    <uPortal.version>3.1.0</uPortal.version>
+    <servlet-api.version>2.4</servlet-api.version>
+    <spring-framework.version>2.5.6</spring-framework.version>
+    <portlet-api.version>1.0</portlet-api.version>
+    <pluto.version>1.1.7</pluto.version>
+
+    <!-- Maven Plugin Dependency Version Properties -->
+
+
+
+
+    <maven-compiler-plugin.version>2.0.2</maven-compiler-plugin.version>
+
+    <maven-jar-plugin.version>2.1</maven-jar-plugin.version>
+    <maven-javadoc-plugin.version>2.2</maven-javadoc-plugin.version>
+    <maven-pmd-plugin.version>2.2</maven-pmd-plugin.version>
+    <maven-project-info-reports-plugin.version>2.0.1</maven-project-info-reports-plugin.version>
+    <maven-site-plugin.version>2.0-beta-5</maven-site-plugin.version>
+    <maven-source-plugin.version>2.0.4</maven-source-plugin.version>
+    <maven-surefire-plugin.version>2.3.1</maven-surefire-plugin.version>
+    <maven-war-plugin.version>2.1-alpha-1</maven-war-plugin.version>
+
+
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>ja-sig</id>
+      <url>http://developer.ja-sig.org/maven2/</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>${maven-site-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>com.google.code.maven-license-plugin</groupId>
+          <artifactId>maven-license-plugin</artifactId>
+          <version>1.4.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.google.code.maven-license-plugin</groupId>
+        <artifactId>maven-license-plugin</artifactId>
+        <configuration>
+          <basedir>${basedir}</basedir>
+          <header>${basedir}/license.txt</header>
+          <quiet>false</quiet>
+          <failIfMissing>true</failIfMissing>
+          <aggregate>false</aggregate>
+          <includes>
+            <include>src/**</include>
+            <include>**/test/**</include>
+          </includes>
+          <excludes>
+            <exclude>target/**</exclude>
+            <exclude>.clover/**</exclude>
+            <exclude>.externalToolBuilders/**</exclude>
+            <exclude>.settings/**</exclude>
+          </excludes>
+          <useDefaultExcludes>true</useDefaultExcludes>
+          <mapping>
+            <jwc>XML_STYLE</jwc>
+            <application>XML_STYLE</application>
+            <myFileExtension>JAVADOC_STYLE</myFileExtension>
+          </mapping>
+          <useDefaultMapping>true</useDefaultMapping>
+          <properties>
+            <year>2009</year>
+            <email>my@email.com</email>
+          </properties>
+          <encoding>UTF-8</encoding>
+          <headerDefinitions>
+          </headerDefinitions>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>${servlet-api.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jasig.portal</groupId>
+      <artifactId>uportal-impl</artifactId>
+      <version>${uPortal.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>${spring-framework.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.portlet</groupId>
+      <artifactId>portlet-api</artifactId>
+      <version>${portlet-api.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pluto</groupId>
+      <artifactId>pluto-container</artifactId>
+      <version>${pluto.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+</project>
