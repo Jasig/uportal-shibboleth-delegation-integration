@@ -1,132 +1,195 @@
 /**
- * Copyright 2009 University of Chicago
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to Jasig under one or more contributor license
+ * agreements. See the NOTICE file distributed with this work
+ * for additional information regarding copyright ownership.
+ * Jasig licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a
+ * copy of the License at:
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+
 package org.jasig.portal.security.provider;
 
 import java.io.IOException;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
+import org.springframework.web.filter.GenericFilterBean;
 
-public class SamlAssertionFilter implements Filter {
+public class SamlAssertionFilter extends GenericFilterBean {
 
-  private final Log log = LogFactory.getLog(this.getClass());
-  private String samlAssertionAttributeName = null;
-  private String idpPublicKeysAttributeName = null;
-
-  /*
-   * Public API.
-   */
-
-  public void init(FilterConfig filterConfig) throws ServletException {
-    idpPublicKeysAttributeName = filterConfig.getInitParameter("idpPublicKeysSessionAttributeName");
-    samlAssertionAttributeName = filterConfig.getInitParameter("samlAssertionSessionAttributeName");
+    private MultiThreadedHttpConnectionManager connectionManager = null;
+    private HttpClient httpClient;
     
-    if (samlAssertionAttributeName == null)
-      throw new ServletException ("samlAssertionAttributeName parameter is required.");
-  }
+    private String samlAssertionSessionAttributeName = null;
+    private String idpPublicKeysSessionAttributeName = null;
+    private int maxTotalConnections = 200;
+    private int connectionTimeout = (int)TimeUnit.SECONDS.convert(30, TimeUnit.MILLISECONDS);
+    private int readTimeout = (int)TimeUnit.SECONDS.convert(30, TimeUnit.MILLISECONDS);
 
-  public void destroy() {
+    public void setSamlAssertionSessionAttributeName(String samlAssertionSessionAttributeName) {
+        this.samlAssertionSessionAttributeName = samlAssertionSessionAttributeName;
+    }
 
-  }
-
-  public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-    log.debug("Entering SamlAssertionFilter.doFilter().");
-    log.info("HTTP headers: [" + headersAsString ((HttpServletRequest)req) + "]");
-    String header = ((HttpServletRequest)req).getHeader ("Shib-Assertion-Count");
-    int assertionCount = 0;
-    String idp = null, assertion = null, signingKeys = null;
+    public void setIdpPublicKeysSessionAttributeName(String idpPublicKeysSessionAttributeName) {
+        this.idpPublicKeysSessionAttributeName = idpPublicKeysSessionAttributeName;
+    }
     
-    if (header != null && !header.isEmpty() && (assertionCount = Integer.parseInt(header)) >= 1) {
-      idp = ((HttpServletRequest)req).getHeader ("Shib-Identity-Provider");
-      header = ((HttpServletRequest)req).getHeader ("Shib-Assertion-01");
-      
-      if (idpPublicKeysAttributeName != null)
-        signingKeys = ((HttpServletRequest)req).getHeader ("Meta-Signing-Keys");
+    /**
+     * @param maxTotalConnections Defaults to 200
+     */
+    public void setMaxTotalConnections(int maxTotalConnections) {
+        this.maxTotalConnections = maxTotalConnections;
+    }
 
-      if (header != null && !header.isEmpty()) {
-        log.info("Retrieving SAML assertion from the URL: " + header);
-        HttpClient client = new HttpClient ();
-        HttpMethod method = new GetMethod(header);
+    /**
+     * @param connectionTimeout In milliseconds, defaults to 30 seconds
+     */
+    public void setConnectionTimeout(int connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+    }
+
+    /**
+     * @param readTimeout In milliseconds, defaults to 30 seconds
+     */
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    @Override
+    protected void initFilterBean() throws ServletException {
+        this.connectionManager = new MultiThreadedHttpConnectionManager();
+        final HttpConnectionManagerParams params = this.connectionManager.getParams();
+        params.setMaxTotalConnections(this.maxTotalConnections);
+        params.setMaxConnectionsPerHost(HostConfiguration.ANY_HOST_CONFIGURATION, this.maxTotalConnections);
+        params.setConnectionTimeout(this.connectionTimeout);
+        params.setSoTimeout(this.readTimeout);
         
-        try {
-          int result = client.executeMethod(method);
-          
-          if (result >= HttpStatus.SC_OK && result < 300) {
-            assertion = method.getResponseBodyAsString();
-          } else {
-            log.error("Unsupported HTTP result code when retrieving the SAML assertion: " + result + ".");
-          }
-        } catch (Exception ex) {
-          // There is nothing that can be done about this exception other than to log it
-          // Exception must be caught and not rethrown to allow normal processing to continue
-          log.error("Exception caught when trying to retrieve SAML assertion.", ex);
-        } finally {
-          method.releaseConnection();
-        }
-      } else {
-        log.error("SAML assertion URL not present, but the assertion count was " + assertionCount + ".");
-      }
-    } else {
-      log.warn("SAML assertion count not present or zero");
+        this.httpClient = new HttpClient(this.connectionManager);
     }
     
-    // Start with processing the login.  This way if the login process creates a new session,
-    // the assertion will remain in the session to be picked up by SamlAssertionUserInfoService
-    try {
-      chain.doFilter(req, res);
+    @Override
+    public void destroy() {
+        this.httpClient = null;
+        
+        this.connectionManager.shutdown();
+        this.connectionManager = null;
     }
-    finally {
-      HttpSession session = ((HttpServletRequest)req).getSession();
 
-      if (assertion != null) {
-        session.setAttribute(samlAssertionAttributeName, assertion);
-      }
-      if (idp != null) {
-        session.setAttribute("IdP", idp);
-      }
-      if (signingKeys != null) {
-        session.setAttribute(idpPublicKeysAttributeName, signingKeys);
-      }
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        this.doHttpFilter((HttpServletRequest)req, (HttpServletResponse)res, chain);
     }
-  }
-
-  private String headersAsString(HttpServletRequest req) {
-    StringBuilder sb = new StringBuilder();
-    Enumeration headers = req.getHeaderNames();
-
-    while (headers.hasMoreElements()) {
-      String headerName = (String)headers.nextElement();
-      String headerValue = req.getHeader(headerName);
-      sb.append(headerName + "=" + headerValue + ", ");
+    
+    protected int getAssertionCount(HttpServletRequest req) {
+        final String assertionCountHeader = req.getHeader("Shib-Assertion-Count");
+        return NumberUtils.toInt(assertionCountHeader, 0);
     }
-    return sb.toString();
-  }
+
+    public void doHttpFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("HTTP headers: [" + headersAsString(req) + "]");
+        }
+        
+        final int assertionCount = this.getAssertionCount(req); 
+        
+        String idp = null, assertion = null, signingKeys = null;
+
+        if (assertionCount > 0) {
+            idp = req.getHeader("Shib-Identity-Provider");
+            final String firstAssertionHeader = req.getHeader("Shib-Assertion-01");
+
+            if (idpPublicKeysSessionAttributeName != null) {
+                signingKeys = req.getHeader("Meta-Signing-Keys");
+            }
+
+            if (StringUtils.isNotEmpty(firstAssertionHeader)) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Retrieving SAML assertion from the URL: " + firstAssertionHeader);
+                }
+                final HttpMethod method = new GetMethod(firstAssertionHeader);
+
+                try {
+                    int result = this.httpClient.executeMethod(method);
+
+                    if (result >= HttpStatus.SC_OK && result < 300) {
+                        assertion = method.getResponseBodyAsString();
+                    }
+                    else {
+                        logger.error("Unsupported HTTP result code when retrieving the SAML assertion: " + result);
+                    }
+                }
+                catch (Exception ex) {
+                    // There is nothing that can be done about this exception other than to log it
+                    // Exception must be caught and not rethrown to allow normal processing to continue
+                    logger.error("Exception caught when trying to retrieve SAML assertion.", ex);
+                }
+                finally {
+                    method.releaseConnection();
+                }
+            }
+            else {
+                logger.error("SAML assertion URL not present, but the assertion count was " + assertionCount + ".");
+            }
+        }
+        else {
+            logger.warn("SAML assertion count not present or zero");
+        }
+
+        // Start with processing the login.  This way if the login process creates a new session,
+        // the assertion will remain in the session to be picked up by SamlAssertionUserInfoService
+        try {
+            chain.doFilter(req, res);
+        }
+        finally {
+            HttpSession session = req.getSession();
+
+            if (assertion != null) {
+                session.setAttribute(samlAssertionSessionAttributeName, assertion);
+            }
+            if (idp != null) {
+                session.setAttribute("IdP", idp);
+            }
+            if (signingKeys != null) {
+                session.setAttribute(idpPublicKeysSessionAttributeName, signingKeys);
+            }
+        }
+    }
+
+    private String headersAsString(HttpServletRequest req) {
+        StringBuilder sb = new StringBuilder();
+        Enumeration<?> headers = req.getHeaderNames();
+
+        while (headers.hasMoreElements()) {
+            String headerName = (String) headers.nextElement();
+            String headerValue = req.getHeader(headerName);
+            sb.append(headerName).append("=").append(headerValue).append(", ");
+        }
+        return sb.toString();
+    }
 }
