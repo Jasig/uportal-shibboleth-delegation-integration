@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.jasig.parent</groupId>
         <artifactId>jasig-parent</artifactId>
-        <version>19</version>
+        <version>20</version>
     </parent>
     
     
@@ -24,9 +24,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:https://source.jasig.org/sandbox/ShibbolethuPortalIntegration/trunk/SAML%20Assertion%20User%20Attribute</connection>
-        <developerConnection>scm:svn:https://source.jasig.org/sandbox/ShibbolethuPortalIntegration/trunk/SAML%20Assertion%20User%20Attribute</developerConnection>
-        <url>https://developer.jasig.org/source/browse/jasigsvn/sandbox/ShibbolethuPortalIntegration/trunk/SAML%20Assertion%20User%20Attribute</url>
+        <connection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/trunk</connection>
+        <developerConnection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/trunk</developerConnection>
+        <url>https://developer.jasig.org/source/browse/jasigsvn/sandbox/uportal-shibboleth-delegation-integration/trunk</url>
     </scm>
 
     <dependencies>
