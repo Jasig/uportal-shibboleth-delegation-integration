@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>SAML Assertion User Attribute</name>
+	<name>uportal-shibboleth-delegation-integration</name>
 	<comment></comment>
 	<projects>
 	</projects>
