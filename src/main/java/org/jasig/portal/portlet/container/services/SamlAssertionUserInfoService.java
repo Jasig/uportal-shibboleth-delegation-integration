@@ -1,25 +1,20 @@
 /**
- * Licensed to Jasig under one or more contributor license
- * agreements. See the NOTICE file distributed with this work
- * for additional information regarding copyright ownership.
- * Jasig licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a
- * copy of the License at:
+ * Copyright 2009 University of Chicago
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.jasig.portal.portlet.container.services;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +49,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
   private IPortletEntityRegistry portletEntityRegistry;
   private IPortletDefinitionRegistry portletDefinitionRegistry;
   private IPortalRequestUtils portalRequestUtils;
-  protected final Log logger = LogFactory.getLog(getClass());
+  protected final Log log = LogFactory.getLog(getClass());
 
   /**
    * @return the portalRequestUtils
@@ -204,7 +199,6 @@ public class SamlAssertionUserInfoService implements UserInfoService {
    * (non-Javadoc)
    * @see org.apache.pluto.spi.optional.UserInfoService#getUserInfo(javax.portlet.PortletRequest)
    */
-  @SuppressWarnings({ "unchecked", "deprecation" })
   @Deprecated
   public Map getUserInfo(PortletRequest request) throws PortletContainerException {
     if (!(request instanceof InternalPortletRequest)) {
@@ -224,7 +218,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
   @SuppressWarnings("unchecked")
   public Map getUserInfo(PortletRequest request, PortletWindow portletWindow) throws PortletContainerException {
 
-    Map<String, String> userInfo = new LinkedHashMap<String, String>();
+    Map<String, String> userInfo = new HashMap<String, String>();
 
     // check to see if a SAML assertion is expected by this portlet
     if (isSamlAssertionRequested(request, portletWindow)) {
@@ -238,7 +232,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
         userInfo.put(this.samlAssertionKey, samlArtifact);
       }
       else
-        logger.warn("Portlet " + portletWindow.getPortletName() + " requested SAML assertion, but none was provided.");
+        log.warn("Portlet " + portletWindow.getPortletName() + " requested SAML assertion, but none was provided.");
     }
 
     // check to see if IdP public keys are expected by this portlet
@@ -253,7 +247,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
         userInfo.put(this.idpPublicKeysKey, idpArtifact);
       }
       else
-        logger.warn("Portlet " + portletWindow.getPortletName() + " requested IdP public key, but none was provided.");
+        log.warn("Portlet " + portletWindow.getPortletName() + " requested IdP public key, but none was provided.");
     }
     return userInfo;
   }
@@ -270,7 +264,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
    *           if expeced attributes cannot be determined
    */
   @SuppressWarnings("unchecked")
-  protected boolean isSamlAssertionRequested(PortletRequest request, PortletWindow plutoPortletWindow) throws PortletContainerException {
+  private boolean isSamlAssertionRequested(PortletRequest request, PortletWindow plutoPortletWindow) throws PortletContainerException {
 
     // get the list of requested user attributes
     final HttpServletRequest httpServletRequest = this.portalRequestUtils.getOriginalPortletAdaptorRequest(request);
@@ -306,7 +300,7 @@ public class SamlAssertionUserInfoService implements UserInfoService {
    *           if expeced attributes cannot be determined
    */
   @SuppressWarnings("unchecked")
-  protected boolean areIdPKeysRequested(PortletRequest request, PortletWindow plutoPortletWindow) throws PortletContainerException {
+  private boolean areIdPKeysRequested(PortletRequest request, PortletWindow plutoPortletWindow) throws PortletContainerException {
 
     // get the list of requested user attributes
     final HttpServletRequest httpServletRequest = this.portalRequestUtils.getOriginalPortletAdaptorRequest(request);
