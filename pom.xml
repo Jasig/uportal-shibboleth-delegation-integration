@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.jasig.service</groupId>
     <artifactId>uportal-shibboleth-delegation-integration</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
 
     <name>SAML Assertion UserInfoService</name>
     <description>Project allowing to make the SAML assertion available as a prtlet attribute</description>
@@ -21,9 +21,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/trunk</connection>
-        <developerConnection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/trunk</developerConnection>
-        <url>https://developer.jasig.org/source/browse/jasigsvn/sandbox/uportal-shibboleth-delegation-integration/trunk</url>
+        <connection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/tags/uportal-shibboleth-delegation-integration-1.1.0</connection>
+        <developerConnection>scm:svn:https://source.jasig.org/sandbox/uportal-shibboleth-delegation-integration/tags/uportal-shibboleth-delegation-integration-1.1.0</developerConnection>
+        <url>https://developer.jasig.org/source/browse/jasigsvn/sandbox/uportal-shibboleth-delegation-integration/tags/uportal-shibboleth-delegation-integration-1.1.0</url>
     </scm>
 
     <dependencies>
